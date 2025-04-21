@@ -74,7 +74,7 @@ pub const Sphere = struct {
 };
 
 pub const HitList = struct {
-    sphere_list: std.MultiArrayList(Sphere) = .{},
+    sphere_list: std.ArrayList(Sphere),
 
     pub fn hit(
         self: *@This(),
@@ -86,9 +86,7 @@ pub const HitList = struct {
         var hit_anything: bool = false;
         var closest: f32 = interval.max;
 
-        for (0..self.sphere_list.len) |i| {
-            std.debug.assert(i < 4);
-            var sphere: Sphere = self.sphere_list.get(i);
+        for (self.sphere_list.items) |*sphere| {
             if (sphere.hit(ray, Interval.new(interval.min, closest), &temp_record)) {
                 hit_anything = true;
                 closest = record.t;
@@ -99,7 +97,7 @@ pub const HitList = struct {
         return hit_anything;
     }
 
-    pub fn deinit(self: *@This(), allocator: std.mem.Allocator) void {
-        self.sphere_list.deinit(allocator);
+    pub fn deinit(self: *@This()) void {
+        self.sphere_list.deinit();
     }
 };

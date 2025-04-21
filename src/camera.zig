@@ -27,7 +27,7 @@ max_depth: i32 = 10,
 
 pub fn init(self: *Self) void {
     self.aspect_ratio = 16.0 / 9.0;
-    self.image_width = 400.0;
+    self.image_width = 1200.0;
     self.image_height = self.image_width / self.aspect_ratio;
     self.samples_per_pixel = 100.0;
     self.pixel_sample_scale = 1.0 / self.samples_per_pixel;
@@ -109,9 +109,7 @@ pub fn getRay(self: *Self, w: f32, h: f32) !Ray {
 pub fn sampleSquare(self: *Self) !Vec3 {
     _ = self;
     // @performance dont init this in the sample
-    var rng = prng.init(@intCast(std.time.nanoTimestamp()));
-    const r = rng.random();
-    return Vec3.new(r.float(f32) - 0.5, r.float(f32) - 0.5, 0);
+    return Vec3.new(Vec.rand(-0.5, 0.5), Vec.rand(-0.5, 0.5), 0);
 }
 
 pub fn rayColor(self: *Self, ray: *Ray, depth: i32, world: *HitList) !Color {

@@ -27,14 +27,15 @@ pub fn main() !void {
     const matieral_right = Matieral{ .type = .metal, .color = Color.new(0.8, 0.6, 0.2) };
 
     // World
-    var world: World = .{};
-    defer world.deinit(allocator);
+    var world: World = World{
+        .sphere_list = std.ArrayList(Sphere).init(allocator),
+    };
+    defer world.deinit();
 
-    try world.sphere_list.append(allocator, Sphere.new(0.5, 1, 0, -1, matieral_right));
-    try world.sphere_list.append(allocator, Sphere.new(0.5, -1.0, 0, -1, matieral_left));
-    try world.sphere_list.append(allocator, Sphere.new(0.5, 0, 0, -1.2, matieral_center));
-    try world.sphere_list.append(allocator, Sphere.new(100, 0, -100.5, -1, matieral_ground));
-    std.log.info("World info: {}", .{world.sphere_list.len});
+    try world.sphere_list.append(Sphere.new(0.5, 1, 0, -1, matieral_right));
+    try world.sphere_list.append(Sphere.new(0.5, -1.0, 0, -1, matieral_left));
+    try world.sphere_list.append(Sphere.new(0.5, 0, 0, -1.2, matieral_center));
+    try world.sphere_list.append(Sphere.new(100, 0, -100.5, -1, matieral_ground));
 
     var cam: Camera = undefined;
     cam.init();

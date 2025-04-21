@@ -1,5 +1,20 @@
 const std = @import("std");
-const prng = std.Random.DefaultPrng;
+
+fn xorshift32() u32 {
+    const static = struct {
+        var x: u32 = 0x12345678;
+    };
+    var x = static.x;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    static.x = x;
+    return x;
+}
+
+pub fn rand(min_val: f32, max_val: f32) f32 {
+    return (@as(f32, @floatFromInt(xorshift32() & 0xFFFF)) / 0x10000) * (max_val - min_val) + min_val;
+}
 
 pub const Vec3 = struct {
     const Self = @This();
@@ -68,21 +83,17 @@ pub fn unit(self: Vec3) Vec3 {
 }
 
 pub fn random() Vec3 {
-    var rng = prng.init(@intCast(std.time.nanoTimestamp()));
-    const r = rng.random();
     return .{
-        .x = r.float(f32),
-        .y = r.float(f32),
-        .z = r.float(f32),
+        .x = rand(0, 1),
+        .y = rand(0, 1),
+        .z = rand(0, 1),
     };
 }
 pub fn randomMinMax(min: f32, max: f32) Vec3 {
-    var rng = prng.init(@intCast(std.time.nanoTimestamp()));
-    const r = rng.random();
     return .{
-        .x = r.float(f32) * (max - min) + min,
-        .y = r.float(f32) * (max - min) + min,
-        .z = r.float(f32) * (max - min) + min,
+        .x = rand(min, max),
+        .y = rand(min, max),
+        .z = rand(min, max),
     };
 }
 
