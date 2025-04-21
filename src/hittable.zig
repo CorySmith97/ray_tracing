@@ -12,6 +12,7 @@ pub const HitRecord = struct {
     material: Material = .{
         .type = .default,
         .color = Color.new(0, 0, 0),
+        .fuzz = 0.0,
     },
     t: f32 = 0,
     front_face: bool = false,

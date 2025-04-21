@@ -12,6 +12,7 @@ const CUtil = @import("color.zig");
 const Color = CUtil.Color;
 const prng = std.Random.DefaultPrng;
 const Material = @import("material.zig");
+const builtin = @import("builtin");
 
 const Self = @This();
 aspect_ratio: f32 = 1.0,
@@ -27,12 +28,14 @@ max_depth: i32 = 10,
 
 pub fn init(self: *Self) void {
     self.aspect_ratio = 16.0 / 9.0;
-    self.image_width = 1200.0;
+    self.image_width = 400.0;
     self.image_height = self.image_width / self.aspect_ratio;
     self.samples_per_pixel = 100.0;
     self.pixel_sample_scale = 1.0 / self.samples_per_pixel;
     self.max_depth = 10;
-    assert(self.image_height > 0);
+    if (builtin.mode == .ReleaseSafe or builtin.mode == .Debug) {
+        assert(self.image_height > 0);
+    }
 
     // Camera
     const focal_length: f32 = 1.0;
@@ -59,7 +62,9 @@ pub fn init(self: *Self) void {
     );
 }
 pub fn render(self: *Self, world: *HitList) !void {
-    assert(self != undefined);
+    if (builtin.mode == .ReleaseSafe or builtin.mode == .Debug) {
+        assert(self != undefined);
+    }
     var file = try std.fs.cwd().createFile("render.ppm", .{});
     defer file.close();
 
@@ -113,11 +118,15 @@ pub fn sampleSquare(self: *Self) !Vec3 {
 }
 
 pub fn rayColor(self: *Self, ray: *Ray, depth: i32, world: *HitList) !Color {
-    assert(self != undefined);
+    if (builtin.mode == .ReleaseSafe or builtin.mode == .Debug) {
+        assert(self != undefined);
+    }
     if (depth <= 0) {
         return Color.new(0, 0, 0);
     }
-    assert(depth >= 0);
+    if (builtin.mode == .ReleaseSafe or builtin.mode == .Debug) {
+        assert(depth >= 0);
+    }
     var rec: Hit.HitRecord = undefined;
     if (world.hit(ray, Interval.new(0.001, Util.inf_f32), &rec)) {
         var scattered: Ray = undefined;

@@ -12,6 +12,7 @@ const Materials = enum {
 const Self = @This();
 type: Materials,
 color: Color,
+fuzz: f32,
 
 pub fn scatter(
     self: *Self,
@@ -32,6 +33,10 @@ pub fn scatter(
         },
         .metal => {
             var scattered_dir = Vec.reflect(ray.direction, rec.normal);
+            scattered_dir = Vec.add(Vec.unit(scattered_dir), Vec.scale(
+                Vec.randomUnitVector(),
+                self.fuzz,
+            ));
             if (Vec.nearZero(scattered_dir)) {
                 scattered_dir = rec.normal;
             }
