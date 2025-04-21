@@ -1,51 +1,42 @@
 const std = @import("std");
-const c = @cImport(@cInclude("SDL2/SDL.h"));
-
-const HEIGHT: u16 = 300;
-const WIDTH: u16 = 400;
+const time = std.time;
+const CUtil = @import("color.zig");
+const Color = CUtil.Color;
+const assert = std.debug.assert;
+const Ray = @import("ray.zig").Ray;
+const Vec = @import("vec.zig");
+const Vec3 = Vec.Vec3;
+const Hittable = @import("hittable.zig");
+const Sphere = Hittable.Sphere;
+const World = Hittable.HitList;
+const Util = @import("util.zig");
+const Interval = @import("interval.zig");
+const Camera = @import("camera.zig");
+const Matieral = @import("material.zig");
 
 pub fn main() !void {
-    if (c.SDL_Init(c.SDL_INIT_VIDEO) != 0) {
-        std.debug.print("ERROR", .{});
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer {
+        _ = gpa.deinit();
     }
-    defer c.SDL_Quit();
+    const allocator = gpa.allocator();
 
-    const window = c.SDL_CreateWindow("Test", 200, 100, WIDTH, HEIGHT, 0);
-    defer c.SDL_DestroyWindow(window);
+    const matieral_ground = Matieral{ .type = .lambertian, .color = Color.new(0.8, 0.8, 0.0) };
+    const matieral_center = Matieral{ .type = .lambertian, .color = Color.new(0.1, 0.2, 0.5) };
+    const matieral_left = Matieral{ .type = .metal, .color = Color.new(0.8, 0.8, 0.8) };
+    const matieral_right = Matieral{ .type = .metal, .color = Color.new(0.8, 0.6, 0.2) };
 
-    const renderer = c.SDL_CreateRenderer(window, -1, c.SDL_RENDERER_ACCELERATED);
-    defer c.SDL_DestroyRenderer(renderer);
+    // World
+    var world: World = .{};
+    defer world.deinit(allocator);
 
-    _ = c.SDL_RenderClear(renderer);
-    var x: i32 = 0;
-    var timer = try std.time.Timer.start();
-    while (x < WIDTH) : (x += 1) {
-        var y: i32 = 0;
-        while (y < HEIGHT) : (y += 1) {
-            const r: f32 = @as(f32, @floatFromInt(x)) / WIDTH;
-            const g: f32 = @as(f32, @floatFromInt(y)) / HEIGHT;
-            const b: f32 = 0;
+    try world.sphere_list.append(allocator, Sphere.new(0.5, 1, 0, -1, matieral_right));
+    try world.sphere_list.append(allocator, Sphere.new(0.5, -1.0, 0, -1, matieral_left));
+    try world.sphere_list.append(allocator, Sphere.new(0.5, 0, 0, -1.2, matieral_center));
+    try world.sphere_list.append(allocator, Sphere.new(100, 0, -100.5, -1, matieral_ground));
+    std.log.info("World info: {}", .{world.sphere_list.len});
 
-            const ir: u8 = @as(u8, @intFromFloat(r * 255.999));
-            const ig: u8 = @as(u8, @intFromFloat(g * 255.999));
-            const ib: u8 = @as(u8, @intFromFloat(b * 255.999));
-            _ = c.SDL_SetRenderDrawColor(renderer, ir, ig, ib, 255);
-            _ = c.SDL_RenderDrawPoint(renderer, x, y);
-        }
-    }
-    const time = timer.read();
-    std.debug.print("Render Time: {}ms\n", .{time / std.time.ns_per_ms});
-    _ = c.SDL_RenderPresent(renderer);
-    var quit = false;
-    while (!quit) {
-        var event: c.SDL_Event = undefined;
-        while (c.SDL_PollEvent(&event) != 0) {
-            switch (event.type) {
-                c.SDL_QUIT => {
-                    quit = true;
-                },
-                else => {},
-            }
-        }
-    }
+    var cam: Camera = undefined;
+    cam.init();
+    try cam.render(&world);
 }
